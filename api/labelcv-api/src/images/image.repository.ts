@@ -1,54 +1,52 @@
-import { Injectable } from "@nestjs/common";
-import { CosmosClient, SqlQuerySpec, FeedOptions } from "@azure/cosmos";
-import { Image } from "./image";
-import { ImageStatus } from "./image.status";
+import { Injectable } from '@nestjs/common';
+import { CosmosClient, SqlQuerySpec, FeedOptions } from '@azure/cosmos';
+import { Image } from './image';
+import { ImageStatus } from './image.status';
 
 @Injectable()
 export class ImageRepository {
-    
-    private readonly cosmosClient: CosmosClient;
-    
-    constructor() {
-        this.cosmosClient = new CosmosClient(
-            {  
-                endpoint: process.env.COSMOSDB_ENDPOINT, 
-                auth: { masterKey: process.env.COSMOSDB_KEY}}
-            );
-    }
+  private readonly cosmosClient: CosmosClient;
 
-    async insert(image: Image) {
-        const imageContainer = this.getImageCollection();
-        await imageContainer.items.create(image);
-    }
+  constructor() {
+    this.cosmosClient = new CosmosClient({
+      endpoint: process.env.COSMOSDB_ENDPOINT,
+      auth: { masterKey: process.env.COSMOSDB_KEY },
+    });
+  }
 
-    private getImageCollection() {
-        const db = this.cosmosClient.database("labelcv");
-        const imageContainer = db.container("image");
-        return imageContainer;
-    }
+  async insert(image: Image) {
+    const imageContainer = this.getImageCollection();
+    await imageContainer.items.create(image);
+  }
 
-    async getAllProcessing(): Promise<Array<Image>>{
-        const imageContainer = this.getImageCollection();
-        const query: SqlQuerySpec = {
-            query: `SELECT * 
+  private getImageCollection() {
+    const db = this.cosmosClient.database('labelcv');
+    const imageContainer = db.container('image');
+    return imageContainer;
+  }
+
+  async getAllImagesByStatus(status: ImageStatus): Promise<Array<Image>> {
+    const imageContainer = this.getImageCollection();
+    const query: SqlQuerySpec = {
+      query: `SELECT * 
                     FROM root 
-                    WHERE root.status = @status`, 
-            parameters: [ {name: "@status", value: ImageStatus.Processing } ]
-        }
-        const options: FeedOptions = {enableCrossPartitionQuery: true}
-        const iterator = imageContainer.items.query(query, options);
-        const docs = await iterator.toArray();
-        return docs.result.map(d => this.convert(d));
-    }
+                    WHERE root.status = @status`,
+      parameters: [{ name: '@status', value: status }],
+    };
+    const options: FeedOptions = { enableCrossPartitionQuery: true };
+    const iterator = imageContainer.items.query(query, options);
+    const docs = await iterator.toArray();
+    return docs.result.map(d => this.convert(d));
+  }
 
-    convert(d: any): Image {
-        return {
-            author: d.author,
-            creationTimestamp: d.creationTimestamp, 
-            status: d.status, 
-            reviewCount: d.reviewCount, 
-            originalHash: d.originalHash,
-            datasetId: d.datasetId
-        };
-    }
+  convert(d: any): Image {
+    return {
+      author: d.author,
+      creationTimestamp: d.creationTimestamp,
+      status: d.status,
+      reviewCount: d.reviewCount,
+      originalHash: d.originalHash,
+      datasetId: d.datasetId,
+    };
+  }
 }
