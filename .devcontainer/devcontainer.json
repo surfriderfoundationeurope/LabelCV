@@ -2,9 +2,7 @@
 {
 	"name": "Node.js (latest LTS) & TypeScript",
 	"dockerFile": "Dockerfile",
-
-	// Uncomment the next line if you want to publish any ports.
-	// "appPort": [],
+	"appPort": [3000],
 
 	// Uncomment the next line if you want to add in default container specific settings.json values
 	// "settings":  { "workbench.colorTheme": "Quiet Light" },
