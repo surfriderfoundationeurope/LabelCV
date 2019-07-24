@@ -10,8 +10,23 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+
+- task: Npm@1
+  inputs:
+    command: 'install'
+    workingDir: 'api/labelcv-api'
+
+- task: Npm@1
+  inputs:
+    command: 'custom'
+    workingDir: 'api/labelcv-api'
+    customCommand: 'build'
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: 'api/labelcv-api/dist/'
+    ArtifactName: 'labelcvapi-dist'
+    publishLocation: 'Container'
 
 - script: |
     echo Add other tasks to build, test, and deploy your project.
