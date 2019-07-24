@@ -1,9 +1,10 @@
 {
   "name": "labelcv-api",
   "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "description": "LabelCV is a service used to build a labeled image dataset via crowdsourcing. Researchers, companies and datascientists can use LabelCV to spinup a website where people can tag an existing image dataset or contribute to this dataset by uploading images.",
+  "author": "Christopher MANEU",
   "license": "MIT",
+  "repository": "https://github.com/cmaneu/LabelCV/",
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "format": "prettier --write \"src/**/*.ts\"",
