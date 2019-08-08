@@ -1,7 +1,7 @@
 import { IsNotEmpty } from 'class-validator';
 export class ImageModel {
   @IsNotEmpty()
-  originalHash: string;
+  imageId: string;
   @IsNotEmpty()
   datasetId: string;
   @IsNotEmpty()

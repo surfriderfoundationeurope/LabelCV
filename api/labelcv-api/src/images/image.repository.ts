@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { CosmosClient, SqlQuerySpec, FeedOptions } from '@azure/cosmos';
+import { CosmosClient, SqlQuerySpec, FeedOptions, ConnectionPolicy } from '@azure/cosmos';
 import { Image } from './image';
 import { ImageStatus } from './image.status';
+
+const DATABASE_NAME = 'LabelCV';
+const IMAGE_CONTAINER_NAME = 'images';
 
 @Injectable()
 export class ImageRepository {
@@ -11,6 +14,7 @@ export class ImageRepository {
     this.cosmosClient = new CosmosClient({
       endpoint: process.env.COSMOSDB_ENDPOINT,
       auth: { masterKey: process.env.COSMOSDB_KEY },
+      connectionPolicy: { DisableSSLVerification: (!!process.env.COSMOSDB_EMULATOR_USED) || false},
     });
   }
 
@@ -20,33 +24,55 @@ export class ImageRepository {
   }
 
   private getImageCollection() {
-    const db = this.cosmosClient.database('labelcv');
-    const imageContainer = db.container('image');
+    const db = this.cosmosClient.database(DATABASE_NAME);
+    const imageContainer = db.container(IMAGE_CONTAINER_NAME);
     return imageContainer;
   }
 
-  async getAllImagesByStatus(status: ImageStatus): Promise<Array<Image>> {
+  async getAllImagesByStatus(status: ImageStatus): Promise<Image[]> {
     const imageContainer = this.getImageCollection();
     const query: SqlQuerySpec = {
-      query: `SELECT * 
-                    FROM root 
-                    WHERE root.status = @status`,
+      query: `SELECT *
+              FROM root
+              WHERE root.status = @status`,
       parameters: [{ name: '@status', value: status }],
     };
+
     const options: FeedOptions = { enableCrossPartitionQuery: true };
     const iterator = imageContainer.items.query(query, options);
     const docs = await iterator.toArray();
     return docs.result.map(d => this.convert(d));
   }
 
+  async getNextImageToAnnotate(dataset: string): Promise<Image> {
+    const imageContainer = this.getImageCollection();
+    const query: SqlQuerySpec = {
+      query: `SELECT *
+              FROM root
+              WHERE
+              root.status = @status
+              AND root._type = 'image'
+              ORDER BY root._ts DESC
+              OFFSET 0 LIMIT 1
+              `,
+      parameters: [{ name: '@status', value: ImageStatus.Rating }],
+    };
+
+    const options: FeedOptions = { enableCrossPartitionQuery: true };
+    const iterator = imageContainer.items.query(query, options);
+    const docs = await iterator.toArray();
+    return this.convert(docs.result[0]);
+  }
+
   convert(d: any): Image {
     return {
       author: d.author,
-      creationTimestamp: d.creationTimestamp,
+      _type: d._type,
+      createdAt: d.createdAt,
       status: d.status,
-      reviewCount: d.reviewCount,
-      originalHash: d.originalHash,
+      imageId: d.imageId,
       datasetId: d.datasetId,
+      parentItem: d.parentItem,
     };
   }
 }

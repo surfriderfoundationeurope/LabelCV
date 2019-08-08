@@ -1,10 +1,11 @@
 import { ImageStatus } from './image.status';
 
 export interface Image {
-  originalHash: string;
-  creationTimestamp: string;
+  imageId: string;
+  _type: string;
   datasetId: string;
-  author: string;
-  reviewCount: number;
+  createdAt: string;
   status: ImageStatus;
+  author: string;
+  parentItem: string;
 }

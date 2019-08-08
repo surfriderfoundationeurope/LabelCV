@@ -1,0 +1,91 @@
+{
+	"info": {
+		"_postman_id": "0fe5fc62-3d26-4611-bdb4-bcea6a82b8fd",
+		"name": "LabelCV Dev",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get all images ",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{ENDPOINT}}/images",
+					"host": [
+						"{{ENDPOINT}}"
+					],
+					"path": [
+						"images"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get next image to annotate",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{ENDPOINT}}/images",
+					"host": [
+						"{{ENDPOINT}}"
+					],
+					"path": [
+						"images"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Add a new image metadata",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "93a9a21d-57bd-4f72-8c69-78814805d062",
+						"exec": [
+							"pm.environment.set(\"hash\", CryptoJS.MD5(\"h\"+Math.floor(Math.random()*9999999)).toString(CryptoJS.enc.Hex));",
+							"console.log(pm.environment.get(\"hash\"))"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"imageId\": \"{{hash}}\",\r\n    \"datasetId\": \"devdataset1\",\r\n\t\"author\": \"192.168.1.1\"\r\n}\r\n"
+				},
+				"url": {
+					"raw": "{{ENDPOINT}}/images",
+					"host": [
+						"{{ENDPOINT}}"
+					],
+					"path": [
+						"images"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"id": "113db966-7dc4-47f9-86f2-e6352cffbc22",
+			"key": "ENDPOINT",
+			"value": "http://localhost:3000",
+			"type": "string"
+		}
+	]
+}
