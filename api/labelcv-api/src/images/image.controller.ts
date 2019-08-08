@@ -11,6 +11,11 @@ export class ImageController {
     return await this.imageService.getAllProcessingImages();
   }
 
+  @Get('next')
+  async getNextImageToAnnotate() {
+    return await this.imageService.getNextImageToAnnotate('devdataset1');
+  }
+
   @Post()
   async postImage(@Body() imageData: ImageModel) {
     await this.imageService.insert(imageData);

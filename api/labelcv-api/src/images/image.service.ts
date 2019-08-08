@@ -14,16 +14,21 @@ export class ImageService {
     );
   }
 
+  async getNextImageToAnnotate(dataset: string) {
+    return await this.imageRepository.getNextImageToAnnotate(dataset);
+  }
+
   async insert(imageData: ImageModel) {
-    const { author, datasetId, originalHash } = imageData;
+    const { imageId, author, datasetId } = imageData;
 
     const image: Image = {
-      author,
-      originalHash,
+      imageId,
+      _type: 'image',
       datasetId,
-      reviewCount: 0,
+      author,
       status: ImageStatus.Processing,
-      creationTimestamp: 'dateTime',
+      createdAt: new Date().toISOString(),
+      parentItem: null,
     };
 
     this.imageRepository.insert(image);
