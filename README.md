@@ -5,7 +5,7 @@
 ![Licence MIT](https://img.shields.io/github/license/cmaneu/LabelCV.svg?logo=sdq)
 
 LabelCV is a service used to build a labeled image dataset via crowdsourcing. Researchers, companies and 
-datascientists can use LabelCV to spinup a website where people can tag an existing image dataset or 
+datascientists can use LabelCV to spin-up a website where people can tag an existing image dataset or 
 contribute to this dataset by uploading images.
 
 ## This project is under **heavy** development

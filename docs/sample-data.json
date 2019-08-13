@@ -1,0 +1,30 @@
+{
+    "id": "",
+    "datasetId": "",
+    "createdAt": "",
+    "parentItem": "<id>",
+    "childItems": [
+        "<id>"
+    ],
+    "file": {
+        "hash": "",
+        "path": ""
+    },
+    "reviewCount": 0,
+    "reviewPriority": 0,
+    "status": 0,
+    "creationTimestamp": "2019-07-12T14:03:40.540Z"
+}
+
+
+{
+    "imageId": "",
+    "annotationId": "",
+    "timestamp": "",
+    "author": "",
+    "annotationType": "binary|single-class|grid-single|grid-multi",
+    "annotationOrigin": "human|model",
+    "annotationTypeMetadata": {  },
+    "label": "pastic",
+    "duration": 1242
+}

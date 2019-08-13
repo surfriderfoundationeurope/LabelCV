@@ -1,0 +1,35 @@
+openapi: '3.0.2'
+info:
+  title: LabelCV
+  description: LabelCV is a sample thing
+  version: '19-08-07'
+servers:
+  - url: https://dev.api.trashornot.com/v1
+
+components:
+  schemas:
+    dataset:
+      type: object
+      properties:
+        id:
+          type: string
+          description: GUID of the dataset
+        name:
+          type: string
+          description: Name of the dataset
+        slug: 
+          type: string
+          description: Short name of the dataset. Can be used in URIs
+
+paths:
+  /dataset:
+    get:
+      responses:
+        '200':
+          description: Returns a list of available datasets
+          content: 
+            application/json:
+              schema:
+                $ref: "#/components/schemas/dataset"
+          
+            
