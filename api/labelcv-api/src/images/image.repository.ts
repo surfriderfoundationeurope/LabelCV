@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { CosmosClient, SqlQuerySpec, FeedOptions, ConnectionPolicy } from '@azure/cosmos';
-import { Image } from './image';
+import { Image, ImageAnnotation } from './image';
 import { ImageStatus } from './image.status';
+import { ImageAnnotationModel } from './image.annotation.model';
 
 const DATABASE_NAME = 'LabelCV';
 const IMAGE_CONTAINER_NAME = 'images';
@@ -64,6 +65,11 @@ export class ImageRepository {
     return this.convert(docs.result[0]);
   }
 
+  async insertAnnotation(imageAnotation: ImageAnnotation) {
+    const imageContainer = this.getImageCollection();
+    await imageContainer.items.create(imageAnotation);
+  }
+
   convert(d: any): Image {
     return {
       author: d.author,
@@ -76,3 +82,4 @@ export class ImageRepository {
     };
   }
 }
+
