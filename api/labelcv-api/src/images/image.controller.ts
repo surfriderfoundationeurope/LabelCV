@@ -4,6 +4,12 @@ import { ImageService } from './image.service';
 import { ImageAnnotationModel } from './image.annotation.model';
 import { AzureStorageFileInterceptor, UploadedFileMetadata } from '@nestjs/azure-storage';
 
+
+export class ImageUpload {
+  author: string;
+  date: string;
+}
+
 @Controller('images')
 export class ImageController {
   constructor(private readonly imageService: ImageService) {}
@@ -30,8 +36,9 @@ export class ImageController {
 
   @Post('upload')
   @UseInterceptors(AzureStorageFileInterceptor('file'))
-  async uploadImage( @UploadedFile() file: UploadedFileMetadata) {
+  async uploadImage( @UploadedFile() file: UploadedFileMetadata, @Body() imageData: ImageUpload) {
     Logger.log(`Storage Account: ${process.env['AZURE_STORAGE_ACCOUNT']} / ${process.env.AZURE_STORAGE_ACCOUNT} `, 'ImageController');
-    Logger.log(`Storage URL: ${file.storageUrl}`, 'ImageController');
+    Logger.log(`Storage URL for file from ${imageData.author} as of ${imageData.date}: ${file.storageUrl}`, 'ImageController');
   }
 }
+
