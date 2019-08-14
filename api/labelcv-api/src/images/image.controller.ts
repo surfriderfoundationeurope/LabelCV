@@ -1,7 +1,8 @@
-import { Controller, Post, Get, Body, Param } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, UseInterceptors, Logger, UploadedFile } from '@nestjs/common';
 import { ImageModel } from './Image.post.model';
 import { ImageService } from './image.service';
 import { ImageAnnotationModel } from './image.annotation.model';
+import { AzureStorageFileInterceptor, UploadedFileMetadata } from '@nestjs/azure-storage';
 
 @Controller('images')
 export class ImageController {
@@ -27,4 +28,10 @@ export class ImageController {
     return await this.imageService.annotateImage(params.imageId, annotation);
   }
 
+  @Post('upload')
+  @UseInterceptors(AzureStorageFileInterceptor('file'))
+  async uploadImage( @UploadedFile() file: UploadedFileMetadata) {
+    Logger.log(`Storage Account: ${process.env['AZURE_STORAGE_ACCOUNT']} / ${process.env.AZURE_STORAGE_ACCOUNT} `, 'ImageController');
+    Logger.log(`Storage URL: ${file.storageUrl}`, 'ImageController');
+  }
 }
