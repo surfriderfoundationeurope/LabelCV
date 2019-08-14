@@ -1,0 +1,8 @@
+FROM node:10.16-alpine
+WORKDIR ./dist
+
+COPY . .
+RUN npm install
+
+EXPOSE 3000
+CMD ["npm", "run", "start:prod"]
