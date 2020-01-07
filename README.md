@@ -16,3 +16,14 @@ it's built. Do not use it for any other usage than learning.
 ## The story behind LabelCV
 
 LabelCV was created as a sample for [Café Dev](https://www.youtube.com/channel/UCSFIjQQBpP6_dNJGwJM5sDQ) YouTube channel to demonstrate how to build Cloud Native apps. It will be used for different Non-Profit organisation projects soon.
+
+## How to setup your dev environment
+
+1. Please Azure Visual Studio Code Remote Development Extensions for Containers to get up and running fast.
+2. Create your own `.env` file on `\api\labelcv-api` page inspired by `.sample-env`
+3. For the storage account, you need a **SAS KEY** not a **Storage account Key**. This is a limitation of tha Azure
+storage library for NestJS.
+
+You'll find a test postman library in `\api\test`.
+
+> Please note that this code is not compatible with Azure Storage Emulator or Azurite.
