@@ -6,9 +6,11 @@ import { AzureStorageModule } from '@nestjs/azure-storage';
 
 @Module({
   imports: [
-    AzureStorageModule.withConfig({sasKey: process.env['AZURE_STORAGE_SAS_KEY'],
-    accountName: process.env['AZURE_STORAGE_ACCOUNT'],
-    containerName: process.env['AZURE_STORAGE_CONTAINER_NAME'] })
+    AzureStorageModule.withConfig({
+      accountName: process.env.AZURE_STORAGE_ACCOUNT,
+      containerName: process.env.AZURE_STORAGE_CONTAINER_NAME,
+      sasKey: process.env.AZURE_STORAGE_SAS_KEY,
+    })
   ],
   controllers: [ImageController],
   providers: [ImageRepository, ImageService],
