@@ -1,19 +1,47 @@
 {
 	"info": {
-		"_postman_id": "0fe5fc62-3d26-4611-bdb4-bcea6a82b8fd",
-		"name": "LabelCV Dev",
+		"_postman_id": "d7a0a05d-0ce0-4b03-b75a-3f9f6eb25c89",
+		"name": "LabelCV",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
+		{
+			"name": "Root",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "7edd1b55-f96f-4ff1-ac06-3746523f3d4c",
+						"exec": [
+							"pm.test(\"Body is correct\", function () {",
+							"    pm.response.to.have.body(\"Welcome to LabelCV API.\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{LABELCV_API_ENDPOINT}}",
+					"host": [
+						"{{LABELCV_API_ENDPOINT}}"
+					]
+				}
+			},
+			"response": []
+		},
 		{
 			"name": "Get all images ",
 			"request": {
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{ENDPOINT}}/images",
+					"raw": "{{LABELCV_API_ENDPOINT}}/images",
 					"host": [
-						"{{ENDPOINT}}"
+						"{{LABELCV_API_ENDPOINT}}"
 					],
 					"path": [
 						"images"
@@ -23,32 +51,18 @@
 			"response": []
 		},
 		{
-			"name": "Get next image to annotate",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{ENDPOINT}}/images",
-					"host": [
-						"{{ENDPOINT}}"
-					],
-					"path": [
-						"images"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Add a new image metadata",
+			"name": "Upload an image",
 			"event": [
 				{
-					"listen": "prerequest",
+					"listen": "test",
 					"script": {
-						"id": "93a9a21d-57bd-4f72-8c69-78814805d062",
+						"id": "9d566aa2-b426-43cf-bc3b-1b1791206b47",
 						"exec": [
-							"pm.environment.set(\"hash\", CryptoJS.MD5(\"h\"+Math.floor(Math.random()*9999999)).toString(CryptoJS.enc.Hex));",
-							"console.log(pm.environment.get(\"hash\"))"
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							""
 						],
 						"type": "text/javascript"
 					}
@@ -59,33 +73,73 @@
 				"header": [
 					{
 						"key": "Content-Type",
-						"value": "application/json",
+						"name": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
 						"type": "text"
 					}
 				],
 				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"imageId\": \"{{hash}}\",\r\n    \"datasetId\": \"devdataset1\",\r\n\t\"author\": \"192.168.1.1\"\r\n}\r\n"
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "/C:/Users/chris/OneDrive/Pictures/vlcsnap-2019-11-29-15h53m14s766.png"
+						},
+						{
+							"key": "author",
+							"value": "jeanbd}}i",
+							"type": "text"
+						},
+						{
+							"key": "date",
+							"value": "2019-01-02",
+							"type": "text"
+						}
+					]
 				},
 				"url": {
-					"raw": "{{ENDPOINT}}/images",
+					"raw": "{{LABELCV_API_ENDPOINT}}images/upload",
 					"host": [
-						"{{ENDPOINT}}"
+						"{{LABELCV_API_ENDPOINT}}images"
 					],
 					"path": [
-						"images"
+						"upload"
 					]
 				}
 			},
 			"response": []
 		}
 	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "621e6235-8b7a-4106-b775-35c7ba70c959",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "2c8bd9f9-6805-40b7-941e-dd1c77b96339",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
 	"variable": [
 		{
-			"id": "113db966-7dc4-47f9-86f2-e6352cffbc22",
-			"key": "ENDPOINT",
-			"value": "http://localhost:3000",
+			"id": "160b00f6-88de-4e09-9919-4814f1e6aa1c",
+			"key": "LABELCV_API_ENDPOINT",
+			"value": "http://localhost:3001/",
 			"type": "string"
 		}
-	]
+	],
+	"protocolProfileBehavior": {}
 }
