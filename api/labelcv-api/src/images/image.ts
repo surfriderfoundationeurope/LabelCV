@@ -2,6 +2,18 @@ import { ImageStatus } from './image.status';
 import { ImageAnnotationBoundingBox } from './image.annotation.boundingbox';
 import { ImageAnnotationType } from './image.annotation.type';
 
+export interface ImageLabel {
+  imageId: string;
+  creatorId: string;
+  createdOn: string;
+  filename: string;
+  view: string;
+  imgQuality: string;
+  context: string;
+  url:string;
+  bbox: ImageAnnotationBoundingBox[];
+}
+
 export interface ImageBase {
   imageId: string;
   _type: string;

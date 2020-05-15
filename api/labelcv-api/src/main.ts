@@ -1,5 +1,6 @@
 import * as dotenv from 'dotenv';
 import { ValidationPipe, Logger } from '@nestjs/common';
+import * as cors from 'cors';
 
 if (process.env.NODE_ENV !== 'production') {
   const result = dotenv.config();
@@ -16,6 +17,7 @@ async function bootstrap() {
 
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(new ValidationPipe());
+  app.use(cors());
 
   await app.listen(process.env.API_PORT || 3000);
 }

@@ -5,19 +5,36 @@ import { ImageModel } from './Image.post.model';
 import { Image } from './image';
 import { ImageAnnotationModel } from './image.annotation.model';
 import { ImageAnnotation } from './image';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class ImageService {
 
   constructor(private readonly imageRepository: ImageRepository) {}
 
-  async getAllProcessingImages() {
+  /*async getAllProcessingImages() {
     return await this.imageRepository.getAllImagesByStatus(
       ImageStatus.Processing,
     );
+  }*/
+
+  async getOneImageFromStorage(imgName: string) {
+    return await this.imageRepository.getOneImage(imgName);
   }
 
-  async getNextImageToAnnotate(dataset: string) {
+  async getOneImageRandom() {
+    return await this.imageRepository.getOneImageRandom();
+  }
+  
+  async getImageBBox(imgId: uuidv4) {
+    return await this.imageRepository.getBBoxForOneImage(imgId);
+  }
+  
+  async getImageTrashTypes() {
+    return await this.imageRepository.getTrashTypes();
+  }
+  
+  /*async getNextImageToAnnotate(dataset: string) {
     return await this.imageRepository.getNextImageToAnnotate(dataset);
   }
 
@@ -54,5 +71,5 @@ export class ImageService {
     };
 
     await this.imageRepository.insertAnnotation(annotation);
-  }
+  }*/
 }
