@@ -55,21 +55,14 @@ const config = {
   ssl: true
 };
 
-const client = new Client(config);
-
-client.connect(err => {
-  if (err) throw err;
-  else {
-    console.log("Client Postgres connected !");
-  }
-});
-
 @Injectable()
 export class ImageRepository {
   //private readonly cosmosClient: CosmosClient;
+  private readonly client : Client;
 
   constructor() {
-    client.connect(err => {
+    this.client = new Client(config);
+    this.client.connect(err => {
       if (err) throw err;
       else {
         console.log("Client Postgres connected !");
@@ -110,7 +103,7 @@ export class ImageRepository {
 
   async getOneImageRandom(): Promise<ImageLabel> {
     const query = 'SELECT * FROM '+ imageTable +' ORDER BY random() LIMIT 1';
-    const res = await client.query(query);
+    const res = await this.client.query(query);
     let resImg = res.rows.map(d => this.convertImgLabel(d));
     resImg[0].url = await this.getOneImage(resImg[0].filename);
     resImg[0].bbox = await this.getBBoxForOneImage(resImg[0].imageId);
@@ -119,21 +112,21 @@ export class ImageRepository {
 
   async getTrashTypes(): Promise<TrashType[]> {
     const query = 'SELECT * FROM '+ trashTable;
-    const res = await client.query(query);
+    const res = await this.client.query(query);
 
     return res.rows.map(d => this.convertTrash(d));
   }
 
   async getOneTrashType(idTrash: string): Promise<TrashType[]> {
     const query = 'SELECT * FROM '+ trashTable + ' WHERE id = ' + idTrash;
-    const res = await client.query(query) ;
+    const res = await this.client.query(query) ;
 
     return res.rows.map(d => this.convertTrash(d));
   }
 
   async getBBoxForOneImage(idImg: uuidv4): Promise<ImageAnnotationBoundingBox[]> {
     const query = 'SELECT * FROM '+ bboxTable + ' WHERE ' + bboxTable + ".id_ref_images_for_labelling::text = '" + idImg + "'";
-    const res = await client.query(query) ;
+    const res = await this.client.query(query) ;
 
     return res.rows.map(d => this.convertBounding(d));
   }
