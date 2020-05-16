@@ -10,15 +10,6 @@ import { BlobServiceClient,
 import {ImageAnnotationBoundingBox} from './image.annotation.boundingbox';
 import { TrashType } from './trashtype.model';
 
-
-import { CosmosClient, SqlQuerySpec, FeedOptions, ConnectionPolicy } from '@azure/cosmos';
-import { Image, ImageAnnotation } from './image';
-import { ImageStatus } from './image.status';
-import { ImageAnnotationModel } from './image.annotation.model';
-
-const DATABASE_NAME = 'LabelCV';
-const IMAGE_CONTAINER_NAME = 'images';
-
 const containerName = 'testforlabelbackend';
 const sharedKeyCredential = new StorageSharedKeyCredential(process.env.AZURE_ACCOUNT_NAME, process.env.AZURE_ACC_KEY);
 const blobServiceClient = new BlobServiceClient(
@@ -42,9 +33,8 @@ const sas = generateBlobSASQueryParameters(
   sharedKeyCredential
 ).toString();
 
-const imageTable = process.env.POSTGRES_LABEL_SCHEMA + '.' + process.env.POSTGRES_IMG_TABLE;
-const bboxTable = process.env.POSTGRES_LABEL_SCHEMA + '.' + process.env.POSTGRES_BOUNDINGBOX_TABLE;
-const trashTable = 'campaign.trash_type';
+const imageTable = process.env.PG_LABEL_SCHEMA + '.' + process.env.PG_IMG_TABLE;
+const bboxTable = process.env.PG_LABEL_SCHEMA + '.' + process.env.PG_BOUNDINGBOX_TABLE;
 
 const config = {
   host: process.env.PG_HOST,
@@ -57,7 +47,6 @@ const config = {
 
 @Injectable()
 export class ImageRepository {
-  //private readonly cosmosClient: CosmosClient;
   private readonly client : Client;
 
   constructor() {
@@ -111,17 +100,33 @@ export class ImageRepository {
   }
 
   async getTrashTypes(): Promise<TrashType[]> {
-    const query = 'SELECT * FROM '+ trashTable;
+    const query = 'SELECT * FROM '+ process.env.PG_TRASH_TABLE;
     const res = await this.client.query(query);
 
     return res.rows.map(d => this.convertTrash(d));
   }
 
   async getOneTrashType(idTrash: string): Promise<TrashType[]> {
-    const query = 'SELECT * FROM '+ trashTable + ' WHERE id = ' + idTrash;
+    const query = 'SELECT * FROM '+ process.env.PG_TRASH_TABLE + ' WHERE id = ' + idTrash;
     const res = await this.client.query(query) ;
 
     return res.rows.map(d => this.convertTrash(d));
+  }
+
+  async updateImageData(imgData: ImageLabel) {
+    const query = "UPDATE " + imageTable + "SET view = " + imgData.view
+     + ", image_quality = " + imgData.imgQuality
+     + ", context = " + imgData.context + "WHERE id = " + imgData.imageId;
+     console.log("updateImageData QUERY: " + query);
+  }
+
+  async addABBoxForAnImage(aBbox : ImageAnnotationBoundingBox) {
+    const query = "INSERT INTO "+ bboxTable + " VALUES ( " + uuidv4() +", "
+     + aBbox.creatorId + ", current_timestamp, " 
+     + aBbox.idTrash + ", " + aBbox.idImg + ", "
+     + aBbox.location_x + ", " + aBbox.location_y + ", "
+     + aBbox.width + ", " + aBbox.height + ")";
+    console.log("addABBoxForAnImage QUERY: " + query);
   }
 
   async getBBoxForOneImage(idImg: uuidv4): Promise<ImageAnnotationBoundingBox[]> {
@@ -133,13 +138,9 @@ export class ImageRepository {
 
   async getOneImage(imgName: string): Promise<string> {
     const containerClient = blobServiceClient.getContainerClient(containerName);
+    const blobClient = containerClient.getBlobClient(imgName);
     
-    //for await (const blob of containerClient.listBlobsFlat()) {
-      //if (img == blob.name) {
-        const blobClient = containerClient.getBlobClient(imgName);
-        return blobClient.url.concat('?'+sas);
-      //}
-    //}
+    return blobClient.url.concat('?'+sas);
   }
 
   /*async getNextImageToAnnotate(dataset: string): Promise<Image> {
@@ -203,6 +204,8 @@ export class ImageRepository {
   convertBounding(d: any): ImageAnnotationBoundingBox {
     return {
       id: d.id,
+      creatorId: d.id_creator_fk,
+      createdOn: d.createdon,
       idTrash: d.id_ref_trash_type_fk,
       idImg: d.id_ref_images_for_labelling,
       location_x: d.location_x,

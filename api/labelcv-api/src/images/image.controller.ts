@@ -1,9 +1,7 @@
-import { Controller, Post, Get, Body, Param, UseInterceptors, Logger, UploadedFile } from '@nestjs/common';
-import { ImageModel } from './Image.post.model';
+import { Controller, Post, Get, Body, Param } from '@nestjs/common';
 import { ImageService } from './image.service';
-import { ImageAnnotationModel } from './image.annotation.model';
-import { AzureStorageFileInterceptor, UploadedFileMetadata } from '@nestjs/azure-storage';
-import { ImageUpload } from './ImageUpload';
+import { ImageLabel } from './image';
+import {ImageAnnotationBoundingBox} from './image.annotation.boundingbox';
 
 @Controller('images')
 export class ImageController {
@@ -27,6 +25,16 @@ export class ImageController {
   @Get('/bbox/:imageId')
   async getImageBBox(@Param() params) {
     return await this.imageService.getImageBBox(params.imageId);
+  }
+
+  @Post('/annotate')
+  async annotateImage(@Body()annotation: ImageAnnotationBoundingBox) {
+    return await this.imageService.annotateImage(annotation);
+  }
+
+  @Post('/update')
+  async updateImageData(@Body()imgData: ImageLabel) {
+    return await this.imageService.updateImageData(imgData);
   }
 
   /*@Get('next')

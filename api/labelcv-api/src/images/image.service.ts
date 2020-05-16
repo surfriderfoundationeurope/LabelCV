@@ -1,22 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { ImageRepository } from './image.repository';
-import { ImageStatus } from './image.status';
-import { ImageModel } from './Image.post.model';
-import { Image } from './image';
-import { ImageAnnotationModel } from './image.annotation.model';
-import { ImageAnnotation } from './image';
+import { ImageAnnotationBoundingBox } from './image.annotation.boundingbox';
+import { ImageLabel } from './image';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class ImageService {
 
   constructor(private readonly imageRepository: ImageRepository) {}
-
-  /*async getAllProcessingImages() {
-    return await this.imageRepository.getAllImagesByStatus(
-      ImageStatus.Processing,
-    );
-  }*/
 
   async getOneImageFromStorage(imgName: string) {
     return await this.imageRepository.getOneImage(imgName);
@@ -32,6 +23,14 @@ export class ImageService {
   
   async getImageTrashTypes() {
     return await this.imageRepository.getTrashTypes();
+  }
+
+  async annotateImage(imageAnnotation: ImageAnnotationBoundingBox) {
+    await this.imageRepository.addABBoxForAnImage(imageAnnotation);
+  }
+
+  async updateImageData(imgData: ImageLabel) {
+    await this.imageRepository.updateImageData(imgData);
   }
   
   /*async getNextImageToAnnotate(dataset: string) {
