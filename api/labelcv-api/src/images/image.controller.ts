@@ -37,6 +37,11 @@ export class ImageController {
     return await this.imageService.updateImageData(imgData);
   }
 
+  /*@Get('/bourinator')
+  async massiveInsert() {
+    return await this.imageService.bourinator();
+  }*/
+
   /*@Get('next')
   async getNextImageToAnnotate() {
     return await this.imageService.getNextImageToAnnotate('devdataset1');

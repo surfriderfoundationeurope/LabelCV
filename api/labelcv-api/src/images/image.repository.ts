@@ -114,26 +114,36 @@ export class ImageRepository {
   }
 
   async updateImageData(imgData: ImageLabel) {
-    const query = "UPDATE " + imageTable + "SET view = " + imgData.view
-     + ", image_quality = " + imgData.imgQuality
-     + ", context = " + imgData.context + "WHERE id = " + imgData.imageId;
-     console.log("updateImageData QUERY: " + query);
+    const query = "UPDATE " + imageTable + " SET view = '" + imgData.view
+     + "', image_quality = '" + imgData.imgQuality
+     + "', context = '" + imgData.context + "' WHERE id = '" + imgData.imageId + "'";
+     const res = await this.client.query(query);
   }
 
   async addABBoxForAnImage(aBbox : ImageAnnotationBoundingBox) {
-    const query = "INSERT INTO "+ bboxTable + " VALUES ( " + uuidv4() +", "
-     + aBbox.creatorId + ", current_timestamp, " 
-     + aBbox.idTrash + ", " + aBbox.idImg + ", "
+    const query = "INSERT INTO "+ bboxTable + " VALUES ( '" + uuidv4() +"', '"
+     + aBbox.creatorId + "', current_timestamp, '" 
+     + aBbox.idTrash + "', '" + aBbox.idImg + "', "
      + aBbox.location_x + ", " + aBbox.location_y + ", "
      + aBbox.width + ", " + aBbox.height + ")";
-    console.log("addABBoxForAnImage QUERY: " + query);
+    const res = await this.client.query(query);
   }
 
   async getBBoxForOneImage(idImg: uuidv4): Promise<ImageAnnotationBoundingBox[]> {
     const query = 'SELECT * FROM '+ bboxTable + ' WHERE ' + bboxTable + ".id_ref_images_for_labelling::text = '" + idImg + "'";
-    const res = await this.client.query(query) ;
+    const res = await this.client.query(query);
 
     return res.rows.map(d => this.convertBounding(d));
+  }
+
+  async bourinatorUpdate(){
+    const containerClient = blobServiceClient.getContainerClient(containerName);
+    
+    for await (const blob of containerClient.listBlobsFlat()) {
+      const query = "INSERT INTO "+ imageTable + " VALUES ( '" + uuidv4() +"', '954dfaf0-cf84-4e5d-ad9d-0d0d6badb884', current_timestamp, '" 
+        + blob.name + "','','','','','')";
+      const res = await this.client.query(query);
+    }
   }
 
   async getOneImage(imgName: string): Promise<string> {

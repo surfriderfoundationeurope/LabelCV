@@ -32,6 +32,10 @@ export class ImageService {
   async updateImageData(imgData: ImageLabel) {
     await this.imageRepository.updateImageData(imgData);
   }
+
+  async bourinator() {
+    await this.imageRepository.bourinatorUpdate();
+  }
   
   /*async getNextImageToAnnotate(dataset: string) {
     return await this.imageRepository.getNextImageToAnnotate(dataset);
