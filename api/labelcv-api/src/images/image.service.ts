@@ -33,46 +33,7 @@ export class ImageService {
     await this.imageRepository.updateImageData(imgData);
   }
 
-  async bourinator() {
+  /*async bourinator() {
     await this.imageRepository.bourinatorUpdate();
-  }
-  
-  /*async getNextImageToAnnotate(dataset: string) {
-    return await this.imageRepository.getNextImageToAnnotate(dataset);
-  }
-
-  async insert(imageData: ImageModel) {
-    const { imageId, author, datasetId } = imageData;
-
-    const image: Image = {
-      imageId,
-      _type: 'image',
-      datasetId,
-      author,
-      status: ImageStatus.Processing,
-      createdAt: new Date().toISOString(),
-      parentItem: null,
-    };
-
-    this.imageRepository.insert(image);
-  }
-
-  async annotateImage(imageIdOrigin: any, imageAnnotation: ImageAnnotationModel) {
-    const { imageId, author, datasetId, annotationId, annotationType, annotationOrigin, label, boundingBox } = imageAnnotation;
-
-    const annotation: ImageAnnotation = {
-      imageId,
-      _type: 'annotation',
-      datasetId,
-      annotationId,
-      createdAt: new Date().toISOString(),
-      author,
-      annotationType,
-      annotationOrigin,
-      label,
-      boundingBox,
-    };
-
-    await this.imageRepository.insertAnnotation(annotation);
   }*/
 }

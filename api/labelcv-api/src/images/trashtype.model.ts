@@ -1,4 +1,4 @@
 export interface TrashType {
     id: string;
-    type: string;
+    name: string;
   }
