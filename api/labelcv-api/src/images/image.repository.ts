@@ -91,7 +91,7 @@ export class ImageRepository {
         console.error(err);
        }
        if (res) {
-        console.log(res);
+        console.log("Image " + imgData.imageId + " successfully updated !");
        }
      });
   }
