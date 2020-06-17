@@ -11,7 +11,7 @@ import {ImageAnnotationBoundingBox} from './image.annotation.boundingbox';
 import { TrashType } from './trashtype.model';
 
 const containerName = 'testforlabelbackend';
-const sharedKeyCredential = new StorageSharedKeyCredential(process.env.AZURE_ACCOUNT_NAME, process.env.AZURE_ACC_KEY);
+const sharedKeyCredential = new StorageSharedKeyCredential(process.env.AZURE_ACCOUNT_NAME, process.env.AZURE_ACCOUNT_KEY);
 const blobServiceClient = new BlobServiceClient(
   'https://'+process.env.AZURE_ACCOUNT_NAME+'.blob.core.windows.net',
   sharedKeyCredential
@@ -33,8 +33,8 @@ const sas = generateBlobSASQueryParameters(
   sharedKeyCredential
 ).toString();
 
-const imageTable = process.env.PG_LABEL_SCHEMA + '.' + process.env.PG_IMG_TABLE;
-const bboxTable = process.env.PG_LABEL_SCHEMA + '.' + process.env.PG_BOUNDINGBOX_TABLE;
+const imageTable = process.env.PG_LABEL_SCHEMA + '.' + process.env.PG_TABLE_IMG;
+const bboxTable = process.env.PG_LABEL_SCHEMA + '.' + process.env.PG_TABLE_BOUNDINGBOX;
 
 const config = {
   host: process.env.PG_HOST,
@@ -48,15 +48,26 @@ const config = {
 @Injectable()
 export class ImageRepository {
   private readonly client : Client;
+  private isPGOk : boolean;
 
   constructor() {
     this.client = new Client(config);
     this.client.connect(err => {
       if (err) throw err;
       else {
+        this.isPGOk = true;
         console.log("Client Postgres connected !");
       }
     });
+  }
+
+  getStatus(): boolean {
+    let isOk = false;
+    if (this.isPGOk && blobServiceClient.accountName == process.env.AZURE_ACCOUNT_NAME) {
+      isOk = true;
+      console.log("Status OK !")
+    }
+    return isOk;
   }
 
   async getOneImageRandom(): Promise<ImageLabel> {
@@ -69,14 +80,14 @@ export class ImageRepository {
   }
 
   async getTrashTypes(): Promise<TrashType[]> {
-    const query = 'SELECT * FROM '+ process.env.PG_TRASH_TABLE;
+    const query = 'SELECT * FROM '+ process.env.PG_TABLE_TRASH;
     const res = await this.client.query(query);
 
     return res.rows.map(d => this.convertTrash(d));
   }
 
   async getOneTrashType(idTrash: string): Promise<TrashType[]> {
-    const query = 'SELECT * FROM '+ process.env.PG_TRASH_TABLE + ' WHERE id = ' + idTrash;
+    const query = 'SELECT * FROM '+ process.env.PG_TABLE_TRASH + ' WHERE id = ' + idTrash;
     const res = await this.client.query(query) ;
 
     return res.rows.map(d => this.convertTrash(d));
@@ -99,7 +110,7 @@ export class ImageRepository {
   async addABBoxForAnImage(aBbox : ImageAnnotationBoundingBox) {
     const query = "INSERT INTO "+ bboxTable + " VALUES ( '" + uuidv4() +"', '"
      + aBbox.creatorId + "', current_timestamp, '" 
-     + aBbox.idTrash + "', '" + aBbox.idImg + "', "
+     + aBbox.trashId + "', '" + aBbox.imageId + "', "
      + aBbox.location_x + ", " + aBbox.location_y + ", "
      + aBbox.width + ", " + aBbox.height + ")";
     await this.client.query(query, (err, res) => {
@@ -162,8 +173,8 @@ export class ImageRepository {
       id: d.id,
       creatorId: d.id_creator_fk,
       createdOn: d.createdon,
-      idTrash: d.id_ref_trash_type_fk,
-      idImg: d.id_ref_images_for_labelling,
+      trashId: d.id_ref_trash_type_fk,
+      imageId: d.id_ref_images_for_labelling,
       location_x: d.location_x,
       location_y: d.location_y,
       width: d.width,

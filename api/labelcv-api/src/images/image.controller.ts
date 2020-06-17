@@ -27,6 +27,11 @@ export class ImageController {
     return await this.imageService.getImageBBox(params.imageId);
   }
 
+  @Get('/status')
+  async getStatus() {
+    return this.imageService.getStatus();
+  }
+
   @Post('/annotate')
   async annotateImage(@Body()annotation: ImageAnnotationBoundingBox) {
     return await this.imageService.annotateImage(annotation);

@@ -17,6 +17,10 @@ export class ImageService {
     return await this.imageRepository.getOneImageRandom();
   }
   
+  async getStatus() {
+    return this.imageRepository.getStatus();
+  }
+  
   async getImageBBox(imgId: uuidv4) {
     return await this.imageRepository.getBBoxForOneImage(imgId);
   }
