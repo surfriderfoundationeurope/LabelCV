@@ -9,7 +9,7 @@ on:
     branches: [ feature/*, dev ]
 
 env:
-  AZURE_FUNCTIONAPP_NAME: labelcv    # set this to your application's name
+  AZURE_FUNCTIONAPP_NAME: plastico-labelcv-back-dev    # set this to your application's name
   AZURE_FUNCTIONAPP_PACKAGE_PATH: './api/labelcv-api'      # set this to the path to your web app project, defaults to the repository root
   NODE_VERSION: '10.x'                     # set this to the node version to use (supports 8.x, 10.x, 12.x)
 
@@ -38,11 +38,12 @@ jobs:
         npm install
         npm run build --if-present
         popd
-    - name: Upload a Build Artifact
-      uses: actions/upload-artifact@v2
+
+    - name: 'Run Azure Functions Action'
+      uses: Azure/functions-action@v1
+      id: fa
       with:
-        # Artifact name
-        name: labelcv-back
-        # A file, directory or wildcard pattern that describes what to upload
-        path: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
+        app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
+        package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+        publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
 
