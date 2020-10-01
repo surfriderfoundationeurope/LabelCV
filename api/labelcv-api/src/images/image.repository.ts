@@ -1,85 +1,186 @@
 import { Injectable } from '@nestjs/common';
-import { CosmosClient, SqlQuerySpec, FeedOptions, ConnectionPolicy } from '@azure/cosmos';
-import { Image, ImageAnnotation } from './image';
-import { ImageStatus } from './image.status';
-import { ImageAnnotationModel } from './image.annotation.model';
+import { Client } from 'pg';
+import { v4 as uuidv4 } from 'uuid';
+import { ImageLabel } from './image';
+import { BlobServiceClient,
+  StorageSharedKeyCredential,
+  SASProtocol,
+  BlobSASPermissions,
+  generateBlobSASQueryParameters } from '@azure/storage-blob';
+import {ImageAnnotationBoundingBox} from './image.annotation.boundingbox';
+import { TrashType } from './trashtype.model';
 
-const DATABASE_NAME = 'LabelCV';
-const IMAGE_CONTAINER_NAME = 'images';
+const containerName = 'testforlabelbackend';
+const sharedKeyCredential = new StorageSharedKeyCredential(process.env.AZURE_ACCOUNT_NAME, process.env.AZURE_ACCOUNT_KEY);
+const blobServiceClient = new BlobServiceClient(
+  'https://'+process.env.AZURE_ACCOUNT_NAME+'.blob.core.windows.net',
+  sharedKeyCredential
+);
+const now = new Date();
+  now.setMinutes(now.getMinutes() - 5);
+
+const tmr = new Date();
+  tmr.setMinutes(tmr.getMinutes() + 45);
+
+const sas = generateBlobSASQueryParameters(
+  {
+    containerName,
+    startsOn: now,
+    expiresOn: tmr,
+    permissions: BlobSASPermissions.parse("r"),
+    protocol: SASProtocol.HttpsAndHttp,
+  },
+  sharedKeyCredential
+).toString();
+
+const imageTable = process.env.PG_LABEL_SCHEMA + '.' + process.env.PG_TABLE_IMG;
+const bboxTable = process.env.PG_LABEL_SCHEMA + '.' + process.env.PG_TABLE_BOUNDINGBOX;
+
+const config = {
+  host: process.env.PG_HOST,
+  user: process.env.PG_USERNAME,
+  password: process.env.PG_PWD,
+  database: process.env.PG_DATABASE,
+  port: 5432,
+  ssl: true
+};
 
 @Injectable()
 export class ImageRepository {
-  private readonly cosmosClient: CosmosClient;
+  private readonly client : Client;
+  private isPGOk : boolean;
 
   constructor() {
-    this.cosmosClient = new CosmosClient({
-      endpoint: process.env.COSMOSDB_ENDPOINT,
-      auth: { masterKey: process.env.COSMOSDB_KEY },
-      connectionPolicy: { DisableSSLVerification: (!!process.env.COSMOSDB_EMULATOR_USED) || false},
+    this.client = new Client(config);
+    this.client.connect(err => {
+      if (err) throw err;
+      else {
+        this.isPGOk = true;
+        console.log("Client Postgres connected !");
+      }
     });
   }
 
-  async insert(image: Image) {
-    const imageContainer = this.getImageCollection();
-    await imageContainer.items.create(image);
+  getStatus(): boolean {
+    let isOk = false;
+    if (this.isPGOk && blobServiceClient.accountName == process.env.AZURE_ACCOUNT_NAME) {
+      isOk = true;
+      console.log("Status OK !")
+    }
+    return isOk;
   }
 
-  private getImageCollection() {
-    const db = this.cosmosClient.database(DATABASE_NAME);
-    const imageContainer = db.container(IMAGE_CONTAINER_NAME);
-    return imageContainer;
+  async getOneImageRandom(): Promise<ImageLabel> {
+    const query = 'SELECT * FROM '+ imageTable +' ORDER BY random() LIMIT 1';
+    const res = await this.client.query(query);
+    let resImg = res.rows.map(d => this.convertImgLabel(d));
+    resImg[0].url = await this.getOneImage(resImg[0].filename);
+    resImg[0].bbox = await this.getBBoxForOneImage(resImg[0].imageId);
+    return resImg[0];
   }
 
-  async getAllImagesByStatus(status: ImageStatus): Promise<Image[]> {
-    const imageContainer = this.getImageCollection();
-    const query: SqlQuerySpec = {
-      query: `SELECT *
-              FROM root
-              WHERE root.status = @status`,
-      parameters: [{ name: '@status', value: status }],
-    };
+  async getTrashTypes(): Promise<TrashType[]> {
+    const query = 'SELECT * FROM '+ process.env.PG_TABLE_TRASH;
+    const res = await this.client.query(query);
 
-    const options: FeedOptions = { enableCrossPartitionQuery: true };
-    const iterator = imageContainer.items.query(query, options);
-    const docs = await iterator.toArray();
-    return docs.result.map(d => this.convert(d));
+    return res.rows.map(d => this.convertTrash(d));
   }
 
-  async getNextImageToAnnotate(dataset: string): Promise<Image> {
-    const imageContainer = this.getImageCollection();
-    const query: SqlQuerySpec = {
-      query: `SELECT *
-              FROM root
-              WHERE
-              root.status = @status
-              AND root._type = 'image'
-              ORDER BY root._ts DESC
-              OFFSET 0 LIMIT 1
-              `,
-      parameters: [{ name: '@status', value: ImageStatus.Rating }],
-    };
+  async getOneTrashType(idTrash: string): Promise<TrashType[]> {
+    const query = 'SELECT * FROM '+ process.env.PG_TABLE_TRASH + ' WHERE id = ' + idTrash;
+    const res = await this.client.query(query) ;
 
-    const options: FeedOptions = { enableCrossPartitionQuery: true };
-    const iterator = imageContainer.items.query(query, options);
-    const docs = await iterator.toArray();
-    return this.convert(docs.result[0]);
+    return res.rows.map(d => this.convertTrash(d));
   }
 
-  async insertAnnotation(imageAnotation: ImageAnnotation) {
-    const imageContainer = this.getImageCollection();
-    await imageContainer.items.create(imageAnotation);
+  async updateImageData(imgData: ImageLabel) {
+    const query = "UPDATE " + imageTable + " SET view = '" + imgData.view
+     + "', image_quality = '" + imgData.imgQuality
+     + "', context = '" + imgData.context + "' WHERE id = '" + imgData.imageId + "'";
+    await this.client.query(query, (err, res) => {
+       if (err) {
+        console.error(err);
+       }
+       if (res) {
+        console.log("Image " + imgData.imageId + " successfully updated !");
+       }
+     });
   }
 
-  convert(d: any): Image {
+  async addABBoxForAnImage(aBbox : ImageAnnotationBoundingBox) {
+    const query = "INSERT INTO "+ bboxTable + " VALUES ( '" + uuidv4() +"', '"
+     + aBbox.creatorId + "', current_timestamp, '" 
+     + aBbox.trashId + "', '" + aBbox.imageId + "', "
+     + aBbox.location_x + ", " + aBbox.location_y + ", "
+     + aBbox.width + ", " + aBbox.height + ")";
+    await this.client.query(query, (err, res) => {
+      if (err) {
+       console.error(err);
+      }
+      if (res) {
+       console.log(res);
+      }
+    });
+  }
+
+  async getBBoxForOneImage(idImg: uuidv4): Promise<ImageAnnotationBoundingBox[]> {
+    const query = 'SELECT * FROM '+ bboxTable + ' WHERE ' + bboxTable + ".id_ref_images_for_labelling::text = '" + idImg + "'";
+    const res = await this.client.query(query);
+
+    return res.rows.map(d => this.convertBounding(d));
+  }
+
+  /*async bourinatorUpdate(){
+    const containerClient = blobServiceClient.getContainerClient(containerName);
+    
+    for await (const blob of containerClient.listBlobsFlat()) {
+      const query = "INSERT INTO "+ imageTable + " VALUES ( '" + uuidv4() +"', '954dfaf0-cf84-4e5d-ad9d-0d0d6badb884', current_timestamp, '" 
+        + blob.name + "','','','','','')";
+      const res = await this.client.query(query);
+    }
+  }*/
+
+  async getOneImage(imgName: string): Promise<string> {
+    const containerClient = blobServiceClient.getContainerClient(containerName);
+    const blobClient = containerClient.getBlobClient(imgName);
+    
+    return blobClient.url.concat('?'+sas);
+  }
+
+  convertImgLabel(d: any): ImageLabel {
     return {
-      author: d.author,
-      _type: d._type,
-      createdAt: d.createdAt,
-      status: d.status,
-      imageId: d.imageId,
-      datasetId: d.datasetId,
-      parentItem: d.parentItem,
+      imageId: d.id,
+      creatorId: d.id_creator_fk,
+      createdOn: d.createdon,
+      filename: d.filename,
+      view: d.view,
+      imgQuality: d.image_quality,
+      context: d.context,
+      url:'',
+      bbox:[]
     };
   }
+
+  convertTrash(d: any): TrashType {
+    return {
+      id: d.id,
+      name: d.name
+    };
+  }
+
+  convertBounding(d: any): ImageAnnotationBoundingBox {
+    return {
+      id: d.id,
+      creatorId: d.id_creator_fk,
+      createdOn: d.createdon,
+      trashId: d.id_ref_trash_type_fk,
+      imageId: d.id_ref_images_for_labelling,
+      location_x: d.location_x,
+      location_y: d.location_y,
+      width: d.width,
+      height: d.height
+    };
+  }
+  
 }
 
