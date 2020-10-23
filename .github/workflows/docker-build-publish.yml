@@ -17,3 +17,24 @@ jobs:
         with:
           name: API
           path: dist/
+  Build-and-Push-Docker-Image:
+    runs-on: ubuntu-latest
+    needs: test
+    name: Docker Build, Tag, Push
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+    - name: Download built artifact
+      uses: actions/download-artifact@master
+      with:
+        name: API
+        path: .
+    - name: Build container image
+      uses: docker/build-push-action@v1
+      with:
+        username: ${{github.actor}}
+        password: ${{secrets.GITHUB_TOKEN}}
+        registry: docker.pkg.github.com
+        repository: surfriderfoundationeurope/LabelCV/label-cv-backend
+        tag_with_sha: true          

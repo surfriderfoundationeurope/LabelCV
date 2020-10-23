@@ -1,6 +1,7 @@
 FROM node:10.16-alpine
-WORKDIR ./dist
+COPY package.json .
 
+WORKDIR ./dist
 COPY . .
 RUN npm install
 
