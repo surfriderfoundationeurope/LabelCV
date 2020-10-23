@@ -17,9 +17,10 @@ jobs:
         with:
           name: API
           path: dist/
+  
   Build-and-Push-Docker-Image:
     runs-on: ubuntu-latest
-    needs: test
+    needs: build
     name: Docker Build, Tag, Push
 
     steps:
