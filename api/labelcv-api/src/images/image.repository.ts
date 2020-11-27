@@ -144,7 +144,7 @@ export class ImageRepository {
     const containerClient = blobServiceClient.getContainerClient(containerName);
     const blobClient = containerClient.getBlobClient(imgName);
     
-    return blobClient.url.concat('?'+sas);
+    return blobClient.url;
   }
 
   convertImgLabel(d: any): ImageLabel {
