@@ -71,7 +71,7 @@ export class ImageRepository {
   }
 
   async getOneImageRandom(): Promise<ImageLabel> {
-    const query = 'SELECT * FROM '+ imageTable +' ORDER BY random() LIMIT 1';
+    const query = "SELECT * FROM "+ imageTable +" WHERE view = '' ORDER BY random() LIMIT 1";
     const res = await this.client.query(query);
     let resImg = res.rows.map(d => this.convertImgLabel(d));
     resImg[0].url = await this.getOneImage(resImg[0].filename);
