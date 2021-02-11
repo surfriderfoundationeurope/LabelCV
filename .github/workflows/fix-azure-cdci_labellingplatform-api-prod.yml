@@ -1,0 +1,37 @@
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+
+name: Build and deploy container app to Azure Web App - labellingplatform-api-prod
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: 'ubuntu-latest'
+
+    steps:
+    - uses: actions/checkout@master
+
+    - uses: azure/docker-login@v1
+      with:
+        login-server: https://surfriderdev.azurecr.io/
+        username: ${{ secrets.AzureAppService_ContainerUsername_4af7ebc3526441c4ab6d856a29db082f }}
+        password: ${{ secrets.AzureAppService_ContainerPassword_98d22c7c622940428b43bcabe031b1ad }}
+
+    - name: Build container
+      working-directory: ./api/labelcv-api/
+      run: |
+        docker build . -t surfriderdev.azurecr.io/${{ secrets.AzureAppService_ContainerUsername_4af7ebc3526441c4ab6d856a29db082f }}/labelcv-backend:${{ github.sha }}
+        docker push surfriderdev.azurecr.io/${{ secrets.AzureAppService_ContainerUsername_4af7ebc3526441c4ab6d856a29db082f }}/labelcv-backend:${{ github.sha }}
+
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: 'labellingplatform-api-prod'
+        slot-name: 'production'
+        publish-profile: ${{ secrets.AzureAppService_PublishProfile_be9aa1bee91e44f48c4b783c202f5e99 }}
+        images: 'surfriderdev.azurecr.io/${{ secrets.AzureAppService_ContainerUsername_4af7ebc3526441c4ab6d856a29db082f }}/labelcv-backend:${{ github.sha }}'
