@@ -22,8 +22,10 @@ jobs:
         username: ${{ secrets.AzureAppService_ContainerUsername_4af7ebc3526441c4ab6d856a29db082f }}
         password: ${{ secrets.AzureAppService_ContainerPassword_98d22c7c622940428b43bcabe031b1ad }}
 
-    - run: |
-        docker build ./api/labelcv-api/ -t surfriderdev.azurecr.io/${{ secrets.AzureAppService_ContainerUsername_4af7ebc3526441c4ab6d856a29db082f }}/labelcv-backend:${{ github.sha }}
+    - name: Build container
+      working-directory: ./api/labelcv-api/
+      run: |
+        docker build . -t surfriderdev.azurecr.io/${{ secrets.AzureAppService_ContainerUsername_4af7ebc3526441c4ab6d856a29db082f }}/labelcv-backend:${{ github.sha }}
         docker push surfriderdev.azurecr.io/${{ secrets.AzureAppService_ContainerUsername_4af7ebc3526441c4ab6d856a29db082f }}/labelcv-backend:${{ github.sha }}
 
     - name: Deploy to Azure Web App
