@@ -27,7 +27,7 @@
     "@nestjs/azure-storage": "^1.0.2",
     "@nestjs/common": "^6.0.0",
     "@nestjs/core": "^6.0.0",
-    "@nestjs/platform-express": "^6.0.0",
+    "@nestjs/platform-express": "^9.2.1",
     "@types/dotenv": "^4.0.3",
     "pg": "^7.17.1",
     "uuid": "^8.0.0",
